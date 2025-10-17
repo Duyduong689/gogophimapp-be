@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Provider Endpoints + JSON Formats</title>
+    <style>
+      body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background: #0b0f14; color: #e6edf3; }
+      .container { max-width: 900px; margin: 0 auto; padding: 28px 18px 64px; }
+      h1 { font-size: 24px; margin: 0 0 16px; }
+      h2 { font-size: 18px; margin: 22px 0 8px; }
+      .panel { background: #0f141a; border: 1px solid #1f2630; border-radius: 10px; padding: 14px 16px; margin: 12px 0; }
+      pre { background: #0b1220; border: 1px solid #1f2630; border-radius: 10px; padding: 12px; overflow: auto; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; }
+      .muted { color: #9da7b3; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Provider Endpoints + JSON Formats</h1>
+      <div class="muted">Chỉ gồm URL endpoint gợi ý và format JSON tối thiểu để triển khai provider.</div>
+
+      <h2>1) Listing (getPosts)</h2>
+      <div class="panel">
+        <pre><code>URL:
+{base}/{filter}?page={page}
+
+Format (Post[]):
+[
+  { "title": "string", "link": "string", "image": "string", "provider": "string?" }
+]</code></pre>
+      </div>
+
+      <h2>2) Search (getSearchPosts)</h2>
+      <div class="panel">
+        <pre><code>URL:
+{base}/search?q={encodedQuery}&page={page}
+
+Format (Post[]):
+[
+  { "title": "string", "link": "string", "image": "string", "provider": "string?" }
+]</code></pre>
+      </div>
+
+      <h2>3) Metadata (getMeta)</h2>
+      <div class="panel">
+        <pre><code>URL:
+Post.link   // ví dụ {base}/m/{slug} | {base}/s/{slug}
+
+Format (Info):
+{
+  "title": "string",
+  "image": "string",
+  "synopsis": "string",
+  "imdbId": "string",
+  "type": "movie|series",
+  "tags": ["string"]?,
+  "cast": ["string"]?,
+  "rating": "string"?,
+  "linkList": [
+    {
+      "title": "string",
+      "quality": "string?",
+      "episodesLink": "string?",
+      "directLinks": [ { "title": "string", "link": "string", "type": "movie|series?" } ]?
+    }
+  ]
+}</code></pre>
+      </div>
+
+      <h2>4) Episodes (getEpisodes)</h2>
+      <div class="panel">
+        <pre><code>URL:
+Info.linkList[].episodesLink  // ví dụ {base}/s/{slug}/season-{n}
+
+Format (EpisodeLink[]):
+[
+  { "title": "string", "link": "string" }
+]</code></pre>
+      </div>
+
+      <h2>5) Stream Page (getStream)</h2>
+      <div class="panel">
+        <pre><code>URL:
+{base}/watch/{id} | {base}/embed/{id} | (link trung gian khác)
+
+Format (Stream[]):
+[
+  {
+    "server": "string",
+    "link": "string",            // m3u8/mp4 hoặc link tiếp tục cần resolve
+    "type": "m3u8|mp4|...",
+    "quality": "360|480|720|1080|2160?",
+    "subtitles": [ { "title": "string", "language": "ISO639_1", "type": "application/x-subrip|application/ttml+xml|text/vtt", "uri": "string" } ]?,
+    "headers": { "key": "value" }?
+  }
+]</code></pre>
+      </div>
+
+      <h2>6) Direct Stream (optional)</h2>
+      <div class="panel">
+        <pre><code>URL:
+https://cdn.server/path/file.m3u8 | https://cdn.server/path/file.mp4
+
+Format (Stream):
+{
+  "server": "string",
+  "link": "string",
+  "type": "m3u8|mp4",
+  "quality": "360|480|720|1080|2160?",
+  "subtitles": [ { "title": "string", "language": "ISO639_1", "type": "text/vtt", "uri": "string" } ]?,
+  "headers": { "key": "value" }?
+}
+// Gợi ý: API ứng dụng tiêu thụ mảng Stream[], có thể trả [Stream] để thống nhất.</code></pre>
+      </div>
+
+      <h2>Gogophim.com (đề xuất cụ thể)</h2>
+      <div class="panel">
+        <pre><code>Base:
+https://app.gogophim.com/v1
+
+1) Listing (getPosts)
+// theo filter do app định nghĩa (ví dụ trending/latest/phim-le/phim-bo/...)
+https://app.gogophim.com/v1/posts?filter={filter}&page={page}
+// theo thể loại (genre)
+https://app.gogophim.com/v1/posts?genre={genreSlug}&page={page}
+
+Sample Response (Post[]):
+[
+  {
+    "title": "Nhiệm vụ bất khả thi 7",
+    "link": "https://app.gogophim.com/v1/m/nhiem-vu-bat-kha-thi-7",
+    "image": "https://cdn.gogophim.com/posters/nvbt7.jpg",
+    "provider": "gogophim"
+  },
+  {
+    "title": "Đảo Hải Tặc (One Piece)",
+    "link": "https://app.gogophim.com/v1/s/dao-hai-tac",
+    "image": "https://cdn.gogophim.com/posters/onepiece.jpg",
+    "provider": "gogophim"
+  }
+]
+
+2) Search (getSearchPosts)
+https://app.gogophim.com/v1/search?query={encodedQuery}&page={page}
+
+Sample Response (Post[]):
+[
+  {
+    "title": "Inception",
+    "link": "https://app.gogophim.com/v1/m/inception-2010",
+    "image": "https://cdn.gogophim.com/posters/inception.jpg",
+    "provider": "gogophim"
+  }
+]
+
+3) Metadata (getMeta)
+https://app.gogophim.com/v1/meta?type=movie&slug={slug}
+https://app.gogophim.com/v1/meta?type=series&slug={slug}
+
+Sample Response (Info):
+{
+  "title": "Inception",
+  "image": "https://cdn.gogophim.com/posters/inception.jpg",
+  "synopsis": "Dom Cobb là một kẻ trộm bậc thầy có khả năng xâm nhập giấc mơ...",
+  "imdbId": "tt1375666",
+  "type": "movie",
+  "tags": ["Hành động", "Khoa học viễn tưởng"],
+  "cast": ["Leonardo DiCaprio", "Joseph Gordon-Levitt"],
+  "rating": "8.8",
+  "linkList": [
+    {
+      "title": "Server A 1080p",
+      "quality": "1080",
+      "directLinks": [
+        { "title": "M3U8", "link": "https://cdn.gogophim.com/media/inception/index.m3u8", "type": "movie" }
+      ]
+    }
+  ]
+}
+
+4) Episodes (getEpisodes)
+https://app.gogophim.com/v1/episodes?slug={slug}&season={n}
+
+Sample Response (EpisodeLink[]):
+[
+  { "title": "Tập 1", "link": "https://app.gogophim.com/v1/s/dao-hai-tac/tap-1" },
+  { "title": "Tập 2", "link": "https://app.gogophim.com/v1/s/dao-hai-tac/tap-2" }
+]
+
+5) Stream (getStream)
+// nhập link detail/episode (link từ Info.linkList hoặc EpisodeLink)
+// API trả về mảng Stream[] đã resolve sẵn
+https://app.gogophim.com/v1/stream?type={movie|series}&link={url-encoded}
+
+Sample Response (Stream[]):
+[
+  {
+    "server": "GogoCDN",
+    "link": "https://cdn.gogophim.com/media/inception/index.m3u8",
+    "type": "m3u8",
+    "quality": "1080",
+    "subtitles": [
+      { "title": "Tiếng Việt", "language": "vi", "type": "text/vtt", "uri": "https://cdn.gogophim.com/subs/inception-vi.vtt" },
+      { "title": "English", "language": "en", "type": "text/vtt", "uri": "https://cdn.gogophim.com/subs/inception-en.vtt" }
+    ],
+    "headers": {
+      "Referer": "https://app.gogophim.com/",
+      "Origin": "https://app.gogophim.com",
+      "User-Agent": "Mozilla/5.0 (Android 13; Mobile) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+    }
+  }
+]
+
+6) Direct Stream (nếu có)
+https://cdn.gogophim.com/media/{path}.m3u8
+https://cdn.gogophim.com/media/{path}.mp4
+
+Sample (Stream):
+{
+  "server": "GogoCDN",
+  "link": "https://cdn.gogophim.com/media/inception/index.m3u8",
+  "type": "m3u8",
+  "quality": "1080",
+  "subtitles": [ { "title": "English", "language": "en", "type": "text/vtt", "uri": "https://cdn.gogophim.com/subs/inception-en.vtt" } ],
+  "headers": { "Referer": "https://app.gogophim.com/" }
+}
+
+Headers gợi ý:
+{
+  "Referer": "https://app.gogophim.com/",
+  "Origin": "https://app.gogophim.com",
+  "User-Agent": "Mozilla/5.0 (Android 13; Mobile) AppleWebKit/537.36 Chrome/124.0 Safari/537.36"
+}
+        </code></pre>
+      </div>
+
+    </div>
+  </body>
+  
+</html>
+
+
