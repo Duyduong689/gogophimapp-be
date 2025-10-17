@@ -9,6 +9,7 @@ import { PostsModule } from './posts/posts.module';
 import { MetaModule } from './meta/meta.module';
 import { EpisodesModule } from './episodes/episodes.module';
 import { StreamModule } from './stream/stream.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { StreamModule } from './stream/stream.module';
     MetaModule,
     EpisodesModule,
     StreamModule,
+    SearchModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService],
