@@ -1,1 +1,0 @@
-# new-be\r\n\r\nMinimal NestJS backend.\r\n\r\n## Scripts\r\n- npm run start:dev - Start in watch mode\r\n- npm run build - Compile TypeScript\r\n- npm run start - Run compiled code\r\n\r\n## Endpoints\r\n- GET / -> Hello World\r\n- GET /health -> { status: 'ok' }\r\n\r\n## Setup\r\n1. npm i\r\n2. npm run start:dev\r\n
